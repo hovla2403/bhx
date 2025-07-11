@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Gọi API Game BHX</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --primary: #1abc9c;
+      --dark: #2c3e50;
+      --light: #ecf0f1;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #f8f9fa, #e8f6f3);
+      padding: 20px;
+      margin: 0;
+      color: #333;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    h2 {
+      color: var(--dark);
+      text-align: center;
+    }
+
+    label {
+      font-weight: bold;
+    }
+
+    input {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      width: 100%;
+      transition: 0.2s;
+    }
+
+    input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 5px var(--primary);
+      outline: none;
+    }
+
+    button {
+      padding: 12px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #16a085;
+    }
+
+    button:active {
+      transform: scale(0.97);
+    }
+
+    #log {
+      background: #f4f4f4;
+      padding: 10px;
+      border-radius: 5px;
+      font-family: monospace;
+      font-size: 14px;
+      height: 300px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      border: 1px solid #ccc;
+    }
+
+    .progress-container {
+      background-color: #ddd;
+      border-radius: 5px;
+      overflow: hidden;
+      height: 20px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background-color: var(--primary);
+      width: 0%;
+      transition: width 0.2s ease;
+      text-align: center;
+      color: white;
+      font-size: 13px;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 15px;
+      }
+
+      h2 {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>🚀 Gọi API Game BHX</h2>
+
+    <label>🎁 Refuser Mở Hộp Ngày Trung Quả Xịn:</label>
+    <input id="refuser1" placeholder="VD: 21187324" />
+
+    <label>💰 Refuser Ngày 10 Lương Về:</label>
+    <input id="refuser2" placeholder="VD: 21197639" />
+
+    <label>🔢 Số lượt chạy:</label>
+    <input id="count" type="number" value="5" min="1" />
+
+    <button onclick="start()">🚨 Bắt đầu chạy</button>
+
+    <div class="progress-container">
+      <div id="progressBar" class="progress-bar">0%</div>
+    </div>
+
+    <div id="log"></div>
+  </div>
+
+  <audio id="doneSound" src="https://cdn.pixabay.com/download/audio/2025/05/12/audio_582a9c9e72.mp3" preload="auto"></audio>
+
+
+  <script>
+    const headers = {
+      'Authorization': 'Bearer 6FF880E9CB93FE09C12253A80EB2FF4B',
+      'Content-Type': 'application/json',
+      'Origin': 'https://www.bachhoaxanh.com',
+      'platform': 'webnew',
+      'reversehost': 'http://bhxapi.live',
+      'xapikey': 'bhx-api-core-2022',
+      'deviceid': 'fc13098b-c690-44f2-9ced-0269370bfd45'
+    };
+
+    function log(msg) {
+      const logBox = document.getElementById('log');
+      logBox.textContent += msg + '\n';
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function updateProgress(current, total) {
+      const bar = document.getElementById('progressBar');
+      const percent = Math.floor((current / total) * 100);
+      bar.style.width = percent + '%';
+      bar.textContent = percent + '%';
+    }
+
+    async function callAPI(gameId, userId, referer, i, label) {
+      try {
+        const res = await fetch('https://apibhx.tgdd.vn/Game/MarkShareLink', {
+          method: 'POST',
+          headers: {
+            ...headers,
+            'Referer': referer,
+            'referer-url': referer
+          },
+          body: JSON.stringify({ gameId, userId })
+        });
+
+        const statusMsg = res.ok ? '✅ Thành công' : '❌ Thất bại';
+        log(`[${label}] Lần ${i + 1}: ${res.status} - ${statusMsg}`);
+      } catch (err) {
+        log(`[${label}] Lần ${i + 1}: ❌ Lỗi - ${err.message}`);
+      }
+    }
+
+    async function start() {
+      document.getElementById('log').textContent = '';
+      document.getElementById('progressBar').style.width = '0%';
+      document.getElementById('progressBar').textContent = '0%';
+
+      const refuser1 = document.getElementById('refuser1').value.trim();
+      const refuser2 = document.getElementById('refuser2').value.trim();
+      const count = parseInt(document.getElementById('count').value, 10);
+      const sound = document.getElementById('doneSound');
+
+      const jobs = [];
+      let totalCalls = 0;
+
+      for (let i = 0; i < count; i++) {
+        if (refuser1) {
+          jobs.push(callAPI(37, parseInt(refuser1), `https://www.bachhoaxanh.com/game/mo-hop-ngay-trung-qua-xin?refuser=${refuser1}`, i, '🎁 Mở hộp'));
+          totalCalls++;
+        }
+        if (refuser2) {
+          jobs.push(callAPI(36, parseInt(refuser2), `https://www.bachhoaxanh.com/game/ngay-10-luong-ve?refuser=${refuser2}`, i, '💰 Lương về'));
+          totalCalls++;
+        }
+      }
+
+      let completed = 0;
+
+      for (const job of jobs) {
+        job.then(() => {
+          completed++;
+          updateProgress(completed, totalCalls);
+          if (completed === totalCalls) {
+            sound.play();
+            log(`🎉 Hoàn tất ${totalCalls} lần gọi API.`);
+          }
+        });
+      }
+    }
+  </script>
+
+</body>
+</html>
